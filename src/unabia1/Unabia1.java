@@ -68,7 +68,7 @@ public class Unabia1 {
         coffeeDatabase.addCoffee("Mocha", 4.00);
     }
 
-    private static void placeOrder(Scanner scanner) {
+  private static void placeOrder(Scanner scanner) {
     System.out.println("\nAvailable Coffees:");
     for (int i = 0; i < coffeeDatabase.getCoffeeMenu().size(); i++) {
         Coffee coffee = coffeeDatabase.getCoffeeMenu().get(i);
@@ -147,17 +147,19 @@ public class Unabia1 {
     Order newOrder = new Order(selectedCoffee.getName(), sizes[sizeChoice], addOnInput, totalPrice);
     coffeeDatabase.addOrder(newOrder);
 
-    System.out.println("Order placed successfully!");
+    System.out.println("\nOrder placed successfully!");
+    System.out.println("-------- Receipt --------");
     System.out.println("Coffee: " + selectedCoffee.getName());
     System.out.println("Size: " + sizes[sizeChoice]);
     System.out.println("Add-ons: " + addOnInput);
     System.out.println("Total Price: $" + totalPrice);
+    System.out.println("Thank you for your order!");
 
+    // Save order to database
     saveOrderToDatabase(newOrder);
 }
 
-
-   private static void saveOrderToDatabase(Order order) {
+private static void saveOrderToDatabase(Order order) {
     String insertQuery = "INSERT INTO purchase_history (coffee_type, size, add_ons, total_price) VALUES (?, ?, ?, ?)";
     try (Connection connection = DatabaseConnection.getConnection();
          PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
@@ -175,43 +177,36 @@ public class Unabia1 {
     }
 }
 
-
-   private static void viewHistory() {
+private static void viewHistory() {
     try (Connection connection = DatabaseConnection.getConnection();
          PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM purchase_history");
          ResultSet resultSet = preparedStatement.executeQuery()) {
 
-        if (!resultSet.next()) {
-            System.out.println("\nNo previous orders found.");
-        } else {
-            System.out.println("\nPurchase History:");
-            do {
-                String coffeeType = resultSet.getString("coffee_type");
-                String size = resultSet.getString("size");
-                String addOns = resultSet.getString("add_ons");
-                double totalPrice = resultSet.getDouble("total_price");
+        // Table Header for Report
+        System.out.println("\nPurchase History Report:");
+        System.out.println("+-------------+------------------------+-------------------+-------------+-------------+-------------------+");
+        System.out.println("| Order ID    | Coffee Type            | Size              | Add-ons    | Total Price | Purchase Date     |");
+        System.out.println("+-------------+------------------------+-------------------+-------------+-------------+-------------------+");
 
-                // Handling the date column as a string and parsing it manually
-                String timestampString = resultSet.getString("date");
-                Timestamp timestamp = null;
+        // Loop through the result set and print the purchase history
+        while (resultSet.next()) {
+            int orderId = resultSet.getInt("id");
+            String coffeeType = resultSet.getString("coffee_type");
+            String size = resultSet.getString("size");
+            String addOns = resultSet.getString("add_ons");
+            double totalPrice = resultSet.getDouble("total_price");
+            String purchaseDate = resultSet.getString("date");
 
-                // Check if the timestamp is not null or empty
-                if (timestampString != null && !timestampString.isEmpty()) {
-                    timestamp = Timestamp.valueOf(timestampString); // Convert string to Timestamp
-                }
-
-                System.out.println("Coffee: " + coffeeType);
-                System.out.println("Size: " + size);
-                System.out.println("Add-ons: " + addOns);
-                System.out.println("Total Price: $" + totalPrice);
-                System.out.println("Order Date: " + (timestamp != null ? timestamp : "N/A"));
-                System.out.println("-------------------------");
-            } while (resultSet.next());
+            // Print each row in the table format
+            System.out.printf("| %-11d | %-22s | %-17s | %-11s | %-11.2f | %-17s |\n", 
+                              orderId, coffeeType, size, addOns, totalPrice, purchaseDate);
         }
+        System.out.println("+-------------+------------------------+-------------------+-------------+-------------+-------------------+");
     } catch (SQLException e) {
-        System.out.println("Error retrieving purchase history: " + e.getMessage());
+        System.out.println("Error fetching purchase history: " + e.getMessage());
     }
 }
+
   
 
    private static void updatePrices(Scanner scanner) {
