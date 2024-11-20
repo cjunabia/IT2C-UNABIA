@@ -2,6 +2,7 @@ package unabia1;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -9,44 +10,55 @@ public class Unabia1 {
 
     static CoffeeDatabase coffeeDatabase = new CoffeeDatabase();
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        boolean running = true;
+   public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    boolean running = true;
 
-        // Initialize database and coffee menu
-        DatabaseConnection.initializeDatabase();
-        initializeCoffeeDatabase();
+    // Initialize database and coffee menu
+    DatabaseConnection.initializeDatabase();
+    initializeCoffeeDatabase();
 
-        while (running) {
-            System.out.println("\n===== Welcome to the Coffee Shop! =====");
-            System.out.println("1. Place a New Order");
-            System.out.println("2. View Purchase History");
-            System.out.println("3. Update Coffee Prices");
-            System.out.println("4. Exit");
-            System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
-
-            switch (choice) {
-                case 1:
-                    placeOrder(scanner);
-                    break;
-                case 2:
-                    viewHistory();
-                    break;
-                case 3:
-                    updatePrices(scanner);
-                    break;
-                case 4:
-                    System.out.println("Thank you for visiting the Coffee Shop!");
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+    while (running) {
+        System.out.println("\n===== Welcome to the Coffee Shop! =====");
+        System.out.println("1. Place a New Order");
+        System.out.println("2. View Purchase History");
+        System.out.println("3. Update Coffee Prices");
+        System.out.println("4. Exit");
+        System.out.print("Choose an option: ");
+        
+        int choice = -1;
+        while (choice < 1 || choice > 4) {
+            try {
+                choice = scanner.nextInt();
+                if (choice < 1 || choice > 4) {
+                    System.out.println("Invalid choice. Please enter a number between 1 and 4.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // clear the buffer
             }
         }
 
-        scanner.close();
+        switch (choice) {
+            case 1:
+                placeOrder(scanner);
+                break;
+            case 2:
+                viewHistory();
+                break;
+            case 3:
+                updatePrices(scanner);
+                break;
+            case 4:
+                System.out.println("Thank you for visiting the Coffee Shop!");
+                running = false;
+                break;
+        }
     }
+
+    scanner.close();
+}
+
 
     private static void initializeCoffeeDatabase() {
         coffeeDatabase.addCoffee("Espresso", 2.50);
@@ -57,61 +69,93 @@ public class Unabia1 {
     }
 
     private static void placeOrder(Scanner scanner) {
-        System.out.println("\nAvailable Coffees:");
-        for (int i = 0; i < coffeeDatabase.getCoffeeMenu().size(); i++) {
-            Coffee coffee = coffeeDatabase.getCoffeeMenu().get(i);
-            System.out.println((i + 1) + ". " + coffee.getName() + " - $" + coffee.getPrice());
-        }
+    System.out.println("\nAvailable Coffees:");
+    for (int i = 0; i < coffeeDatabase.getCoffeeMenu().size(); i++) {
+        Coffee coffee = coffeeDatabase.getCoffeeMenu().get(i);
+        System.out.println((i + 1) + ". " + coffee.getName() + " - $" + coffee.getPrice());
+    }
 
+    // Coffee selection validation
+    int coffeeChoice = -1;
+    while (coffeeChoice < 0 || coffeeChoice >= coffeeDatabase.getCoffeeMenu().size()) {
         System.out.print("Choose your coffee (1-" + coffeeDatabase.getCoffeeMenu().size() + "): ");
-        int coffeeChoice = scanner.nextInt() - 1;
+        try {
+            coffeeChoice = scanner.nextInt() - 1;
+            if (coffeeChoice < 0 || coffeeChoice >= coffeeDatabase.getCoffeeMenu().size()) {
+                System.out.println("Invalid coffee choice. Please choose a number between 1 and " + coffeeDatabase.getCoffeeMenu().size());
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+            scanner.nextLine(); // Clear the buffer
+        }
+    }
 
-        String[] sizes = {"Small", "Medium", "Large"};
-        double[] sizePrices = {0.00, 0.50, 1.00};
+    String[] sizes = {"Small", "Medium", "Large"};
+    double[] sizePrices = {0.00, 0.50, 1.00};
 
+    // Size selection validation
+    int sizeChoice = -1;
+    while (sizeChoice < 0 || sizeChoice >= sizes.length) {
         System.out.println("\nAvailable Sizes:");
         for (int i = 0; i < sizes.length; i++) {
             System.out.println((i + 1) + ". " + sizes[i] + " - $" + sizePrices[i]);
         }
         System.out.print("Choose size (1-3): ");
-        int sizeChoice = scanner.nextInt() - 1;
-
-        String[] addOns = {"Milk", "Sugar", "Vanilla", "Caramel"};
-        double[] addOnPrices = {0.50, 0.30, 0.70, 0.80};
-
-        double addOnTotal = 0;
-        System.out.println("\nAvailable Add-ons (Choose 0 to skip):");
-        for (int i = 0; i < addOns.length; i++) {
-            System.out.println((i + 1) + ". " + addOns[i] + " - $" + addOnPrices[i]);
+        try {
+            sizeChoice = scanner.nextInt() - 1;
+            if (sizeChoice < 0 || sizeChoice >= sizes.length) {
+                System.out.println("Invalid size choice. Please choose a number between 1 and 3.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+            scanner.nextLine(); // Clear the buffer
         }
-        System.out.print("Choose add-ons (comma-separated, e.g., 1,3 for Milk and Vanilla): ");
-        scanner.nextLine(); // Consume newline
-        String addOnInput = scanner.nextLine();
-        String[] selectedAddOns = addOnInput.split(",");
+    }
 
-        for (String addOn : selectedAddOns) {
+    String[] addOns = {"Milk", "Sugar", "Vanilla", "Caramel"};
+    double[] addOnPrices = {0.50, 0.30, 0.70, 0.80};
+
+    // Add-on selection with validation
+    double addOnTotal = 0;
+    System.out.println("\nAvailable Add-ons (Choose 0 to skip):");
+    for (int i = 0; i < addOns.length; i++) {
+        System.out.println((i + 1) + ". " + addOns[i] + " - $" + addOnPrices[i]);
+    }
+    scanner.nextLine(); // Consume newline
+    System.out.print("Choose add-ons (comma-separated, e.g., 1,3 for Milk and Vanilla): ");
+    String addOnInput = scanner.nextLine();
+    String[] selectedAddOns = addOnInput.split(",");
+
+    for (String addOn : selectedAddOns) {
+        try {
+            int addOnIndex = Integer.parseInt(addOn.trim()) - 1;
+            if (addOnIndex >= 0 && addOnIndex < addOns.length) {
+                addOnTotal += addOnPrices[addOnIndex];
+            } else if (!addOn.trim().equals("0")) {
+                System.out.println("Invalid add-on choice: " + addOn.trim());
+            }
+        } catch (NumberFormatException e) {
             if (!addOn.trim().equals("0")) {
-                int addOnIndex = Integer.parseInt(addOn.trim()) - 1;
-                if (addOnIndex >= 0 && addOnIndex < addOns.length) {
-                    addOnTotal += addOnPrices[addOnIndex];
-                }
+                System.out.println("Invalid input: " + addOn + " is not a valid number.");
             }
         }
-
-        Coffee selectedCoffee = coffeeDatabase.getCoffeeMenu().get(coffeeChoice);
-        double totalPrice = selectedCoffee.getPrice() + sizePrices[sizeChoice] + addOnTotal;
-
-        Order newOrder = new Order(selectedCoffee.getName(), sizes[sizeChoice], addOnInput, totalPrice);
-        coffeeDatabase.addOrder(newOrder);
-
-        System.out.println("Order placed successfully!");
-        System.out.println("Coffee: " + selectedCoffee.getName());
-        System.out.println("Size: " + sizes[sizeChoice]);
-        System.out.println("Add-ons: " + addOnInput);
-        System.out.println("Total Price: $" + totalPrice);
-
-        saveOrderToDatabase(newOrder);
     }
+
+    Coffee selectedCoffee = coffeeDatabase.getCoffeeMenu().get(coffeeChoice);
+    double totalPrice = selectedCoffee.getPrice() + sizePrices[sizeChoice] + addOnTotal;
+
+    Order newOrder = new Order(selectedCoffee.getName(), sizes[sizeChoice], addOnInput, totalPrice);
+    coffeeDatabase.addOrder(newOrder);
+
+    System.out.println("Order placed successfully!");
+    System.out.println("Coffee: " + selectedCoffee.getName());
+    System.out.println("Size: " + sizes[sizeChoice]);
+    System.out.println("Add-ons: " + addOnInput);
+    System.out.println("Total Price: $" + totalPrice);
+
+    saveOrderToDatabase(newOrder);
+}
+
 
    private static void saveOrderToDatabase(Order order) {
     String insertQuery = "INSERT INTO purchase_history (coffee_type, size, add_ons, total_price) VALUES (?, ?, ?, ?)";
@@ -170,21 +214,48 @@ public class Unabia1 {
 }
   
 
-    private static void updatePrices(Scanner scanner) {
-        System.out.println("\nCurrent Coffee Prices:");
-        for (int i = 0; i < coffeeDatabase.getCoffeeMenu().size(); i++) {
-            Coffee coffee = coffeeDatabase.getCoffeeMenu().get(i);
-            System.out.println((i + 1) + ". " + coffee.getName() + " - $" + coffee.getPrice());
-        }
-
-        System.out.print("Choose the coffee to update the price (1-" + coffeeDatabase.getCoffeeMenu().size() + "): ");
-        int coffeeChoice = scanner.nextInt() - 1;
-        System.out.print("Enter the new price for " + coffeeDatabase.getCoffeeMenu().get(coffeeChoice).getName() + ": $");
-        double newPrice = scanner.nextDouble();
-
-        coffeeDatabase.getCoffeeMenu().get(coffeeChoice).setPrice(newPrice);
-        System.out.println(coffeeDatabase.getCoffeeMenu().get(coffeeChoice).getName() + " price updated to $" + newPrice);
+   private static void updatePrices(Scanner scanner) {
+    System.out.println("\nCurrent Coffee Prices:");
+    for (int i = 0; i < coffeeDatabase.getCoffeeMenu().size(); i++) {
+        Coffee coffee = coffeeDatabase.getCoffeeMenu().get(i);
+        System.out.println((i + 1) + ". " + coffee.getName() + " - $" + coffee.getPrice());
     }
+
+    // Coffee choice validation
+    int coffeeChoice = -1;
+    while (coffeeChoice < 0 || coffeeChoice >= coffeeDatabase.getCoffeeMenu().size()) {
+        System.out.print("Choose the coffee to update the price (1-" + coffeeDatabase.getCoffeeMenu().size() + "): ");
+        try {
+            coffeeChoice = scanner.nextInt() - 1;
+            if (coffeeChoice < 0 || coffeeChoice >= coffeeDatabase.getCoffeeMenu().size()) {
+                System.out.println("Invalid coffee choice. Please choose a number between 1 and " + coffeeDatabase.getCoffeeMenu().size());
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+            scanner.nextLine(); // Clear the buffer
+        }
+    }
+
+    // Price validation
+    double newPrice = -1;
+    while (newPrice < 0) {
+        System.out.print("Enter the new price for " + coffeeDatabase.getCoffeeMenu().get(coffeeChoice).getName() + ": $");
+        try {
+            newPrice = scanner.nextDouble();
+            if (newPrice < 0) {
+                System.out.println("Invalid price. Please enter a price greater than or equal to $0.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid price.");
+            scanner.nextLine(); // Clear the buffer
+        }
+    }
+
+    // Update the price
+    coffeeDatabase.getCoffeeMenu().get(coffeeChoice).setPrice(newPrice);
+    System.out.println(coffeeDatabase.getCoffeeMenu().get(coffeeChoice).getName() + " price updated to $" + newPrice);
+}
+
 
     static class Coffee {
         private String name;
